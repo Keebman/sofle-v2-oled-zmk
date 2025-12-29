@@ -7,6 +7,11 @@ on:
       - sofle_hybrid_rgb_rev5
   workflow_dispatch:
     inputs:
+      keyboard_name:
+        description: 'Keyboard BLE name (max 16 chars)'
+        required: true
+        default: 'Sofle'
+        type: string
       board:
         description: 'Board name'
         required: true
@@ -38,6 +43,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Validate keyboard name length
+        run: |
+          NAME="${{ inputs.keyboard_name }}"
+          if [ ${#NAME} -gt 16 ]; then
+            echo "Error: Keyboard name must be 16 characters or less (got ${#NAME})"
+            exit 1
+          fi
+      
       - name: Generate dynamic build.yaml
         run: |
           cat > build.yaml << EOF
@@ -50,12 +63,20 @@ jobs:
               shield: settings_reset
           EOF
       
+      - name: Update keyboard name in config
+        run: |
+          if grep -q "CONFIG_ZMK_KEYBOARD_NAME" config/sofle.conf; then
+            sed -i 's/CONFIG_ZMK_KEYBOARD_NAME=.*/CONFIG_ZMK_KEYBOARD_NAME="${{ inputs.keyboard_name }}"/' config/sofle.conf
+          else
+            echo 'CONFIG_ZMK_KEYBOARD_NAME="${{ inputs.keyboard_name }}"' >> config/sofle.conf
+          fi
+      
       - name: Commit build.yaml
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add build.yaml
-          git commit -m "Update build.yaml for manual build" || echo "No changes"
+          git add build.yaml config/sofle.conf
+          git commit -m "Update build.yaml and keyboard name for manual build" || echo "No changes"
           git push
 
   build:
