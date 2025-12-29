@@ -31,7 +31,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  update_build_config:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -50,8 +50,18 @@ jobs:
               shield: settings_reset
           EOF
       
-      - name: Build with custom config
-        uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.2
+      - name: Commit build.yaml
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add build.yaml
+          git commit -m "Update build.yaml for manual build" || echo "No changes"
+          git push
+
+  build:
+    if: github.event_name == 'workflow_dispatch'
+    needs: update_build_config
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.2
 
   build_default:
     if: github.event_name == 'push'
