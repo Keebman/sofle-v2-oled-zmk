@@ -6,17 +6,60 @@ on:
       - master
       - sofle_hybrid_rgb_rev5
   workflow_dispatch:
+    inputs:
+      board:
+        description: 'Board name'
+        required: true
+        default: 'nice_nano_v2'
+        type: choice
+        options:
+          - nice_nano_v2
+          - nice_nano
+          - seeeduino_xiao_ble
+      shield_left:
+        description: 'Left shield'
+        required: true
+        default: 'sofle_left'
+        type: string
+      shield_right:
+        description: 'Right shield'
+        required: true
+        default: 'sofle_right'
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Generate dynamic build.yaml
+        run: |
+          cat > build.yaml << EOF
+          include:
+            - board: ${{ inputs.board }}
+              shield: ${{ inputs.shield_left }}
+            - board: ${{ inputs.board }}
+              shield: ${{ inputs.shield_right }}
+            - board: ${{ inputs.board }}
+              shield: settings_reset
+          EOF
+      
+      - name: Build with custom config
+        uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.2
+
+  build_default:
+    if: github.event_name == 'push'
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.2
 
   create_release_master:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    needs: build
+    needs: build_default
     runs-on: ubuntu-latest
     steps:
       - name: Download firmware artifacts
