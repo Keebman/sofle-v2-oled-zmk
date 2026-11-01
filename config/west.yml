@@ -5,9 +5,8 @@ manifest:
   projects:
     - name: zmk
       remote: zmkfirmware
-      # Use the current upstream ZMK branch so Studio support and board definitions
-      # remain compatible with the current Zephyr toolchain.
-      revision: main
+      # Keep firmware compatible with nice_nano_v2 and the v0.3 build workflow.
+      revision: v0.3
       import: app/west.yml
   self:
     path: config
