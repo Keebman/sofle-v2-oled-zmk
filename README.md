@@ -20,6 +20,19 @@ you can fork the repository, and make modifications to the keymap files in the f
 The repository has a GitHub workflow that leverages the zmkfirmware/zmk repository to build the firmware. The workflow will build the firmware and upload it as an artifact to the repository.
 The workflow is triggered on push, pull_request, and manually via workflow_dispatch. You can trigger the workflow manually by going to the Actions tab in your forked repository and selecting the workflow.
 
+### Build configuration and Bluetooth name
+The firmware and reusable build workflow are pinned to ZMK v0.3, which supports the `nice_nano_v2` board ID used here. Upgrade both together when moving to a newer ZMK release.
+
+Push and manual builds use the checked-in `build.yaml` and `config/` files. Manual builds do not rewrite or commit configuration. The Bluetooth name is set in `config/sofle.conf`:
+
+```conf
+CONFIG_ZMK_KEYBOARD_NAME="Sofle Sebastian"
+```
+
+To change the name, edit and commit that setting before building. ZMK Studio over USB is enabled for the left (central) half in `build.yaml`; the right half and settings-reset firmware do not enable Studio. OLED, encoders, sleep, and the existing keymap remain enabled. Connect the left half by USB to use [ZMK Studio](https://zmk.studio/).
+
+After flashing, forget the keyboard in your host's Bluetooth settings and pair again if the host still displays the old name. Use the settings-reset firmware only when needed: it clears saved pairings/settings, and must be followed by the correct left/right firmware.
+
 ### Workflow Artifact
 Once the workflow has completed, you can download the artifact from the Actions tab. The artifact will be a .zip file that contains the firmware. Extract the .zip file in your
 local directory. The extracted files will include:
